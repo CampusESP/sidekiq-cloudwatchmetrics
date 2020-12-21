@@ -38,9 +38,10 @@ module Sidekiq::CloudWatchMetrics
 
     INTERVAL = 60 # seconds
 
-    def initialize(client: Aws::CloudWatch::Client.new, additional_dimensions: {})
+    def initialize(client: Aws::CloudWatch::Client.new, additional_dimensions: {}, namespace: "Sidekiq")
       @client = client
       @additional_dimensions = additional_dimensions.map { |k, v| {name: k.to_s, value: v.to_s} }
+      @namespace = namespace
     end
 
     def start
@@ -186,7 +187,7 @@ module Sidekiq::CloudWatchMetrics
       # We can only put 20 metrics at a time
       metrics.each_slice(20) do |some_metrics|
         @client.put_metric_data(
-          namespace: "Sidekiq",
+          namespace: @namespace,
           metric_data: some_metrics,
         )
       end
